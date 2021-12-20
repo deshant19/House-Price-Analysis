@@ -1,0 +1,551 @@
+---
+title: "DATA 602 F2021 Project Report"
+author: "Group 2: 30150728 Deshant Sachdeva, 30057607 Nidhika Bhoria, 30016397 Wonje Choi"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output:
+  pdf_document:
+    extra_dependencies:
+    - bbm
+    - xcolor
+    toc: yes
+  html_document:
+    df_print: paged
+    toc: yes
+  html_notebook:
+    toc: yes
+---
+
+<!--
+# Note: html does not show the marks, but pdf does.
+-->
+
+\pagebreak
+<!--
+Note: If Monte-Carlo methods are used, every one may get slightly different results due to use of different random seeds.
+-->
+
+<!--
+\textcolor{red}{[Total 66 marks]}
+-->
+
+<!-- R Markdown can knit the following two tables (one in R Markdown format and one in Latex format) to pdf,  but can only knit the R Markdown format to notebook nb.html. So if you want to keep the Table in both pdf and nb.html, I would suggest you to use the R Markdown format.
+To add a caption, the syntax is Table: followed by your caption; Pandocs numbers automatically. Leave one line blank between the end of the table and the caption line.
+-->
+
+<!--
+| Johnson Family | Transformation | Parameter Conditions | X Condition |
+|----------------|-----------------------------------------------------------------------|---------------------------------------------------------|-------------------------------------|
+| $S_B$ | $Z = \gamma + \eta \ ln(\frac {X - \epsilon} {\lambda + \epsilon - X})$ | $\eta, \lambda >0, -\infty < \gamma, \epsilon < \infty$ | $\epsilon < X < \epsilon + \lambda$ |
+| $S_L$ | $Z = \gamma + \eta \ ln(X - \epsilon)$ | $\eta >0, -\infty < \gamma, \epsilon < \infty$ | $X > \epsilon$ |
+| $S_U$ | $Z = \gamma + \eta \sinh^{-1}(\frac {X - \epsilon} {\lambda})$ | $\eta, \lambda >0, -\infty < \gamma, \epsilon < \infty$ | $-\infty < X < \infty$ |
+
+Table: Transformations Associated with the Johnson System
+
+\begin{table}[h]
+\centering
+\caption{Transformations Associated with the Johnson System}
+\begin{tabular}{|l|l|l|l|}
+\hline
+Johnson Family & Transformation & Parameter Conditions & X Condition \\ \hline
+$S_B$ & $Z=\gamma + \eta ln(\frac {X - \epsilon} {\lambda + \epsilon - X})$ & $\eta, \lambda >0, -\infty < \gamma, \epsilon < \infty$ & $\epsilon < X < \epsilon + \lambda$ \\ \hline
+$S_L$ & $Z=\gamma + \eta ln(X - \epsilon)$ & $\eta >0, -\infty < \gamma, \epsilon < \infty$ & $X > \epsilon$ \\ \hline
+$S_U$ & $Z=\gamma + \eta \sinh^{-1}(\frac {X - \epsilon} {\lambda})$ & $\eta, \lambda >0, -\infty < \gamma, \epsilon < \infty$ & $-\infty < X < \infty$ \\ \hline
+\end{tabular}
+\end{table}
+-->
+
+
+\pagebreak
+
+# The purpose/motivation
+
+Buying a house is one of the most important and difficult decision for modern society people. when they would like to buy the house, they consider the price of house firstly. The purpose of our project data is to propose an innovative real estate valuation approach which is quantitative comparative approach. 
+The proportion is assuming that the price of house per unit area at real estate is the average price of house per unit area of the  housing supply and demand multiplied by the product of several  factors. First of all,the multiple regression models of these adjustment coefficients can be built with the regression analysis by step-by-step to estimate that the reason of chasing the price of house per unit area in Taipei.Then the adjustment coefficients of comparative cases and target case can be estimated with these single regression models. Secondly, we test the Analysis of Variance (ANOVA) is a statistical analysis to test the degree of differences between more than one variables of estimation.(3) In addition, the ANOVA test to decide the affection that independent variables have on the dependent variable in a regression study. The results of the ANOVA test are shown in a tabular form known as an ANOVA table which is the F-value and P-value for multiple regression model.
+
+Moreover,The purpose of this data is to approach the data set with a Non Parametric Data analysis approach as well as a Parametric analysis approach.
+
+Non Parametric approach
+1. Chi-square Test for regression analysis 
+2. Z test
+
+Parametric approach
+3. Linear Regression
+
+
+\pagebreak
+# Data collection 
+
+The information of this data set is the market historical data set of real estate valuation are collected from Sindian Dist., New Taipei City, Taiwan. The real estate valuation is a regression problem. The data set was randomly split into the training data set and the testing data set.(1)
+The output is as follow that,
+
+Y= house price of unit area (10000 New Taiwan Dollar/Ping, where Ping is a local unit, 1 Ping = 3.3 meter squared)
+
+X1=the transaction date (for example, 2013.250=2013 March, 2013.500=2013 June, etc.) 
+
+X2=the house age (unit: year) 
+
+X3=the distance to the nearest MRT station (unit: meter) 
+
+X4=the number of convenience stores in the living circle on foot 
+
+X5=the geographic coordinate, latitude. (unit: degree) 
+
+X6=the geographic coordinate, longitude. (unit: degree) 
+
+First Statistical analysis, we collected the house price of per unit area for there is any evidence at 5% level that the average house price of unit area has changed from $37? 
+we set the null and alternative hypothesis test $H_0=37$ and $H_a\ne37$ with two.sided. 
+Calculating the Z-test and p-value to analyse our data.
+
+Secondly Statistical analysis, we collected data that House age, distance of MRT station and number of convinenace store for the Chi-square Test for test of Independence and multiple regression model with prediction model. 
+$house price of unit area = a +B1*house age +B2*distance of MRT station +B3*number of convenience store near by$
+Calculating the Chi-test, anova table including F-test and  P-value. also, scatter plot with slope. 
+
+
+
+\pagebreak
+# Statistical analysis 
+Changing the price of house has so many reason for that. We found the data which is from 2013 to 2014 in TaiPei's housing price depends on 6 variables so we set up the 3 questions to analysis our data.
+```{r}
+library(dplyr)
+```
+
+## Question 1. 
+
+
+```{r}
+data = read.csv("/Users/edwardchoi/Downloads/Real estate.csv")
+
+head(data, 6)
+```
+
+**Here we are going to answer whether there is any evidence at 5% level that the average house price of unit area has changed from $37?**
+
+
+Below is the graphical observation of data that describes house price of a unit area,
+
+
+```{r}
+hist(data$Y.house.price.of.unit.area, nclass = 40, probability = T, 
+     xlab = "Price", 
+     main = "Histogram for price of unit area")
+lines(density(data$Y.house.price.of.unit.area))
+```
+Since the probability $\alpha$ is small the data looks to be normally distributed, here we will be performing z-test using formula as,
+
+$z = (\bar{x}-\mu_0)/(\sigma/\sqrt{n})$
+
+From the question we want to test $H_0=37$ while our alternate hypothesis is as $H_a\ne37$. This is a two-tailed test and $\alpha=0.05$. Here if the null hypothesis, $H_0$ is accepted then we have the evidence that there is no change in mean unit price of house with 95% confidence while if $H_0$ is rejected then we do have the evidence on the change of prices. We calculate the value of z as,
+
+
+```{r}
+set.seed(2021)
+
+house.price = data$Y.house.price.of.unit.area
+n = length(house.price)
+x.bar=mean(house.price)
+s=sd(house.price)
+
+z.05 = round(qnorm(0.05/2), 2) #critical value for 95% CI;
+cat("Value of z should lie between=","(", z.05,",", -z.05,")", "\n")
+
+mu_0 = 37
+cat('mu_0=', mu_0)
+
+z = round((x.bar-mu_0)/(s/sqrt(n)), 2)
+cat("\nValue of z=", z)
+```
+
+From the resultant value of z = 1.47, which lies between the $z\alpha$ and $-z\alpha$ values of ( -1.96 , 1.96 ), we fail to reject null hypothesis($H_0$). Further it will help in calculating the probability of the mean occurring within a standard normal distribution.
+
+We also calculate the 95% confidence interval for the same data by doing the z-test as,
+
+
+```{r}
+alpha = 1 - 0.95
+house.price = data$Y.house.price.of.unit.area
+n = length(house.price)
+z.test = qt(1-alpha/2,n-1)
+cat("95% confidence interval is", round(z.test, 4))
+```
+
+Now calculating the P-value as,
+
+
+```{r}
+cat("P-Value when z = 1.47 =", round(2*pt(z, n-1, lower.tail = FALSE), 4))
+```
+
+From the P-value obtained which is greater then $\alpha$, we again fail to reject $H_0$ since a higher p-value's significance is having a stronger evidence that you should not reject the null hypothesis. Hence we conclude that our null hypothesis is valid and that the average house price of unit area has remained to be $37.
+
+
+
+\pagebreak
+## Question 2.
+Non Parametric Analysis
+
+1. Chi-square Test for Regression analysis
+
+Chi-square is a statistical test commonly used to compare observed data with data we would expect to obtain according to a specific hypothesis. This test helps us to decide whether the observed data differs significantly from the expected outcome. Mosaic plot was made to visually interpret the hypothesis of chi square test of independence.
+  A mosaic plot is a visual representation of the association between two or more categorical variables. It is a square subdivided into rectangular tiles the area of which represents the conditional relative frequency for a cell in the contingency table. Each tile is colored to show the deviation from the expected frequency (residual) from a Pearson X² or Likelihood Ratio G² test.Red tiles indicate significant negative residuals, where the frequency is less than expected. Blue tiles indicate significant positive residuals, where the frequency is greater than expected. The intensity of the color represents the magnitude of the residual.
+
+In this dataset, we are trying to analyse, whether the price of houses are dependent on the house age, distance from the LRT station and the number of convenience stores present around the house.
+The solution is drafted in such a way to see the impact of all three factors on the price of the house. The Hypothesis is described as follows at 95% Confidence Interval Level:
+
+ $H_o$: $Price of House depend upon all House age, Distance from LRT station, No.of convenience stores$
+ 
+ 
+ $H_a$: $Price of House does not depend upon all House age, Distance from LRT station, No.of convenience stores$
+    
+The objective was to analyse which factors has dependency on effecting the house price using Chi-square and P-Value test
+We divided the house price into two parts based on the mean of the prices of the database.
+The prices which were above mean were reffered as Above average price and the prices below average were notified as below average. And all the three factors were categorized in terms of these two price variations. 
+
+**Step 1: Read and summarise the data**
+
+
+```{r}
+# Read the data using read.csv command with headers.
+realEstateData = read.csv("/Users/edwardchoi/Downloads/Real estate.csv")
+
+# Headers were renamed for the ease of display and use
+colnames(realEstateData) = 
+  c('Index','Transaction Date','House Age','LRT Distance', 
+                             'Convenience Stores', 'Latitude', 
+                              'Longitude', 'Price')
+
+head(realEstateData,4)
+```
+
+
+**Step 2: Data wrangling and cleaning**
+
+
+```{r}
+# Created two categories of House price based on mean value in the dataset
+#                 Below Average = Price between 0 to 38 
+#                 Above Average = Price between 38 to 120
+
+# Categorized the house price data using cut command
+realEstateData$PriceLabel = cut(realEstateData$Price,c(0,38,120), 
+                                include.lowest = TRUE)
+levels(realEstateData$PriceLabel)= c("Below Average","Above Average")
+
+# Selected the required columns using dplyr library
+realEstateSelectedData = 
+  realEstateData %>% select('House Age':'Convenience Stores')
+
+#Aggregated the mean of data based on group by real estate price level
+aggRealEstateData = aggregate(realEstateSelectedData, by = 
+                                list(realEstateData$PriceLabel), mean)
+aggRealEstateData = 
+  aggRealEstateData %>% select('House Age':'Convenience Stores')
+
+#Created a data matrix to define the observed 
+#measurements based on House Price Categories
+
+HouseMatrix = data.matrix(aggRealEstateData)
+colnames(HouseMatrix) = c('House Age','LRT Distance', 'Convenience Stores')
+rownames(HouseMatrix) = c("Below Average","Above Average")
+print(HouseMatrix)
+```
+
+
+**Step 3: Calculate Chi-Square test & P-Value **
+
+
+```{r}
+# Observed measurement based on the data 
+cat("Observerd Values Based on Hypothesis\n\n")
+oFrequency = HouseMatrix
+print(oFrequency)
+
+
+# Compute Expected value based on hypothesis
+
+eFrequency = 
+  as.array(margin.table(oFrequency,1))%*%t(
+    as.array(margin.table(oFrequency,2)))/
+  margin.table(oFrequency)
+
+cat("\nExpected Values Based on Hypothesis\n\n")
+print(eFrequency)
+```
+
+
+```{r}
+# Compute Degree of Freedom as (nRows - 1)*(nCols -1)
+df = (dim(oFrequency)[1] -1)*(dim(oFrequency)[2]-1)
+
+#Assumed 95% Confidence Interval Level
+alpha = 0.05
+
+#Calculate ChiSquare Test
+chisquare = sum((oFrequency - eFrequency)^2/eFrequency)
+cat("\nChi-Square Value calculated is: ", chisquare,"\n")
+
+#Calculated P-Value
+pvalue = pchisq(chisquare,df, lower.tail = FALSE)
+cat("\n P-value based on Chi-Square Test and DF as ", df, "is :", pvalue,"\n")
+
+
+#Calculate Z*Critical at 95% Confidence Level and with Degree of Freedom as df
+qchisquare.05 = qchisq(alpha, df, lower.tail = FALSE)
+cat("\n Z critical based confidence 
+    level of 95% and DF as ", df, "is :", qchisquare.05,"\n")
+
+```
+
+
+**Step 4: Test the Chi-square and P-Value to testify the assumed null hypothesis**
+
+
+```{r}
+
+# If P-Value > Alpha or Chi-Square Test value is Less than Z *Critical,
+# the null hypothesis is accepted, else rejected.
+
+if( pvalue> alpha | chisquare < qchisquare.05){
+  
+  cat("Null Hypothesis is accepted at 95% confidence level: 
+  Price of House depend upon all House age, 
+      Distance from LRT station, No.of convenience stores")
+  } else {
+    
+    cat("The Alternate Hypothesis is accepted at 95% confidence level: 
+        Price of House does not depend upon on all House age, 
+        Distance from LRT station,
+        No.of convenience stores ")
+
+  }
+
+```
+
+
+**Step 5: Analyse the Residuals and comprehend the results.**
+
+
+```{r}
+#Calculated the Standard residuals between Observed and Expected Values
+stdresidTable = (oFrequency - eFrequency)/sqrt(eFrequency)
+cat("The residual table is: \n ")
+print(stdresidTable)
+```
+
+
+```{r}
+#Mosaicplots for visual analysis of results 
+mosaicplot(oFrequency, shade = TRUE, main = "House Price Vs Parameters")
+```
+
+
+The hypothesis assumed that all house ages, distance of LRT and the number of convenience stores nearby the house, does not impact the price. The residual for the following is higher.
+
+1. Above average House price does not depend on house age due to high residual number.
+2. Above average house price also depend on number of convenience stores due to high residual number.
+
+However, The LRT distance directly impact the house price, more LRT distance from the house, the price of the house will be lower.
+
+
+
+\pagebreak
+## Question 3.
+Multiple Linear Regression Modeling.
+
+**Does house price of unit area  any effect by the house age , the distance to the nearest MRT station and the number of convenience stores in the living circle on foot are near by ?**
+
+
+```{r}
+data = read.csv("/Users/edwardchoi/Downloads/Real estate.csv")
+y = data$Y.house.price.of.unit.area
+x1= data$X2.house.age 
+x2 = data$X3.distance.to.the.nearest.MRT.station
+x3 = data$X4.number.of.convenience.stores
+
+data_fit = lm(y~x1+x2+x3,data=data)
+
+summary(data_fit)
+```
+
+The regression model is $house price of unit area = 42.9773 -0.2528 * the house age - 0.0054 * the distance to the nearest MRT station+ 1.2974 *number of convenience stores$ in the living circle on foot 
+Hence, if the house is getting older the price of house will decrease by 0.2528 every year. Also, if the MRT station is far from the house, the price of house will decrease by 0.0054 each meters. If the number of convience stores is more from house, the price of house increases by 1.2974 each stores. 
+
+
+```{r}
+#scatter plot
+plot(y~x1, data = data, main="Scatter Plot Of House price of per unit
+     versus House Age",
+     xlab='House Age', ylab= 'Price of House per unit')
+data_fit1= lm(y~x1)
+abline(data_fit1$coef, col='red')
+```
+
+
+```{r}
+plot(y~x2, data = data, main="Scatter Plot Of House price of per unit versus 
+     Nearest MRT Station",
+     xlab='Nearest MRT Station', ylab= 'Price of House per unit')
+data_fit2= lm(y~x2)
+abline(data_fit2$coef, col='red')
+```
+
+This both figures show a strong tendency for House Age and Nearest MRT station with Price of house per unit area  to move in opposite directions; for example, they rise above or fall below their means at opposite times. abline which is sploe is negative, which means a negative relationship between House Age and Nearest MRT station with Price of house per unit area. Hence, the points in the graph are tightly clustered about the abline (slope) due to the strength of the relationship between House Age and Nearest MRT station with Price of house per unit area.
+
+
+```{r}
+plot(y~x3, data = data, main="Scatter Plot Of House price of per unit versus 
+     Number of Convenience Stores",
+     xlab='Number of Convenience Stores', ylab= 'Price of House per unit' )
+data_fit3= lm(y~x3)
+abline(data_fit3$coef, col='red')
+```
+
+The figure shows a very strong tendency for Number of Convenience Stores and price of house per unit area to both rise above their means or fall below their means at the same time. The straight line is a abline which is slope, designed to come as close as possible to all the data points. The abline (slope) has a positive slope, which shows a positive relationship between Number of Convenience Stores and price of house per unit area. The points in the graph are tightly clustered about the abline due to the strength of the relationship between Number of Convenience Stores and price of house per unit area.
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(data_fit)
+```
+
+
+```{r}
+fit = aov(y~x1+x2+x3)
+shapiro.test(fit$residuals)
+```
+
+From the “Normal Q-Q” plot, the assumption of normality of the model does seem to be met by the data. The p-value of the Shapiro-Wilk normality test is 0.8786 > 0.05, which suggests that the normality assumption is met. 
+
+From the “Residuals vs Fitted” plot, there are a few outliers but the differences between the variances are acceptable. Hence, the assumption of equal variance of the model seems to be met by the data. The equal variances indicate that this model is a good fit to the data.
+
+
+```{r}
+fit = aov(y~x1+x2+x3)
+summary(fit)
+```
+
+Based on the ANOVA table above, for the house age, our test statistic F-value = 39.61 and p-value = 7.97e-10, which is less than a=0.05. So that indicates that there exists a house age effect on the price of house.
+
+Based on the ANOVA table above, for the distance of MRT, our test statistic F-value = 399.17 and p-value = 2e-16, which is less than a=0.05. So that indicates that there exists a distance of MRT effect on  the price of house.
+
+Based on the ANOVA table above, for the number of conviences store near by, our test statistic F-value = 44.59 and p-value = 7.91e-11, which is less than a=0.05. So that indicates that there exists a number of convience stores effect on the price of house.
+
+
+```{r}
+set.seed(2021)
+newdata = data.frame(x1=10, x2=10, x3=3)
+predict(data_fit, newdata, interval = 'prediction', level = 0.95)
+predict(data_fit, newdata, interval = 'confidence', level = 0.95)
+```
+
+From the R output,a 95% prediction interval for the pice of house per unit area when house has built for 10 years, MRT is within 10KM away from house and 3 convience stores near by house between 26.0294  and 62.5451 per unit area.and a 95% confidence interval for the pice of house per unit area when house has built for 10 years, MRT is within 10KM away from house and 3 convience stores near by house between 42.6690 and 45.9055 per unit area. Thus, a 95% confidence interval is narrower than the prediction interval of the price of house.
+
+From the multiple regression model, we see a decrease in house price of per unit area as distance to the nearest MRT station (unit:meter), so we consider  variables of predictive model. We want to examine the relationship between the price of house level y of the per unit area and the distance to the nearest MRT station of x.
+Let us use 80% of the data to build which is train a regression model and use the 20% of the data to test the prediction capability of the built model.(4)
+
+
+```{r}
+data = read.csv("/Users/edwardchoi/Downloads/Real estate.csv")
+set.seed(2021)
+data_fit4 = 
+  lm(Y.house.price.of.unit.area~X3.distance.to.the.nearest.MRT.station, 
+     data=data)
+print(data_fit4)
+
+plot(Y.house.price.of.unit.area~X3.distance.to.the.nearest.MRT.station, 
+     data=data, 
+     main="Scatter Plot Of house price and distance of MRT station")
+abline(data_fit4$coef, col='red')
+
+summary(data_fit4)
+```
+
+
+```{r}
+n = length(data$X3.distance.to.the.nearest.MRT.station)
+length(data$Y.house.price.of.unit.area)
+SSxy = 
+  sum(data$X3.distance.to.the.nearest.MRT.station
+      *data$Y.house.price.of.unit.area) - 
+  (sum(data$X3.distance.to.the.nearest.MRT.station)
+   *sum(data$Y.house.price.of.unit.area))/n
+
+SSxx= sum((data$X3.distance.to.the.nearest.MRT.station)^2) -
+  (sum(data$X3.distance.to.the.nearest.MRT.station)^2)/n
+
+b1 = SSxy/SSxx
+cat("Least Square Estimation of b1 is ", round(b1,4),"\n")
+b0 = 
+  (sum(data$Y.house.price.of.unit.area))/n-b1*
+  (sum(data$X3.distance.to.the.nearest.MRT.station)/n)
+
+cat("Least Square Estimation of b0 is ", round(b0,4),"\n")
+```
+
+
+
+```{r}
+set.seed(2021)
+index = sample(1:n, round(0.8*n), replace=FALSE) 
+train80 = data[index, ]  
+test20 = data[-index, ]  
+train80_fit = 
+  lm(Y.house.price.of.unit.area~X3.distance.to.the.nearest.MRT.station, 
+     data=train80) 
+summary(train80_fit)
+
+pred20 = predict.lm(train80_fit, newdata = test20)
+
+mae = mean(abs(test20$Y.house.price.of.unit.area - pred20))
+cat("Mean Absolute Error (MAE) is ", round(mae,4),"\n")
+
+mape = 
+  mean(abs((test20$Y.house.price.of.unit.area - pred20)
+           /test20$Y.house.price.of.unit.area))
+
+cat("Mean Absolute Percentage Error (MAPE) is ", round(mape,4),"\n")
+mse = mean((test20$Y.house.price.of.unit.area - pred20)^2)
+cat("Mean Squared Error (MSE) is ", round(mse,4),"\n")
+
+pred20pred=predict.lm(train80_fit, newdata=test20, level=0.95, 
+                      interval="prediction")  
+matplot(test20$X3.distance.to.the.nearest.MRT.station,
+        pred20pred, pch=c(22,2,6), col=c("blue","green","brown"), 
+ main="95% Prediction Intervals", 
+ xlab="X3.distance.to.the.nearest.MRT.station", 
+ ylab="Y.house.price.of.unit.area")
+
+points(test20$X3.distance.to.the.nearest.MRT.station, 
+       test20$Y.house.price.of.unit.area, col="red", pch=19)
+legend("bottomleft", legend=c("Predicted","Lowlimit","Uplimit","Actual"),
+       col=c("blue","green","brown", "red"), pch=c(22,2,6,19), cex=0.8)
+
+```
+
+The regression model is that $house price of per unit area = 45.8514 -0.0073*distance.to.the.nearest.MRT.station$
+
+Mean Absolute Error (MAE) is  6.5938, Mean Absolute Percentage Error (MAPE) is 0.2255  and Mean Squared Error (MSE) is  71.2935. We see that the MAE, MAPE and MSE are small and the 95% prediction intervals contain all the actual house price of per unit area values based on the test data. We can settle down with the model built on 80% of the data, $house price of per unit area = 45.8514 -0.0073*distance.to.the.nearest.MRT.station$. 
+
+
+\pagebreak
+# Conclusion 
+
+In this project we have tried to summarize the realestate data using statistical tools. Here we had house price as the dependent variable along with several dependent variables like house age, distance from MRT station, Number of convenience stores. We analysed the data using two approaches, Non parametric and the parametric approach. In the parametric approach we performed Chi square test of Independence and Z test. the latter section we performed linear regression over the data.
+In our statistical conclusion, the house price of per unit area has changed by so many different influences. Below From the our statistical test outputs are the observations made while answering each of the test,
+we can conclude by calculating the P-value which was on higher side that the average house price of unit area remained to be $37 which was around the mean price. So with the age there was not much significant change in prices and we hence from the data available we determine that age is not a factor of measurement in calculating the cost of a house.  
+In Chi square test, the hypothesis assumed that all house ages, distance of MRT and the number of convenience stores nearby the house, does not impact the price. The residual for the following is higher. Above average House price does not depend on house age due to high residual number. Above average house price also depend on number of convenience stores due to high residual number. While, the MRT distance directly impact the house price, more MRT distance from the house, the price of the house will be lower.
+For the multiple linear regression model, house price of per unit area has an affect by house age, distance of MRT station and number of convenience store.
+Based on the ANOVA table above, for the house age, distance of MRT and number of convenience store, our test statistic p-value of three variables are, which is less than a=0.05. Thus, indicates that there exists all three variable effect on the price of house. 
+
+
+\pagebreak
+# Reference
+
+1. I.-C.Y. (2018, August 18). UCI Machine Learning Repository: Real estate valuation data set Data Set. UCI. https://archive.ics.uci.edu/ml/datasets/Real+estate+valuation+data+set
+
+2. Real estate price prediction. (2018, December 8). Bruce. https://www.kaggle.com/quantbruce/real-estate-price-prediction
+
+3. Wikipedia contributors. (2021, October 15). Analysis of variance. Wikipedia. https://en.wikipedia.org/wiki/Analysis_of_variance
+
+4. Lecture note. Week 4-lV. Introduction to Simple Linear Regression Using R.
+https://d2l.ucalgary.ca/d2l/le/content/400980/viewContent/4914357/View
+
